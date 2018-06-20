@@ -1,32 +1,4 @@
-"""
-A multivariate Laurent polynomial python module
-Created by Bostjan Gabrovsek on 05/04/15.
 
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <http://unlicense.org>
-"""
 
 import re
 
@@ -83,7 +55,7 @@ class term:
             self.coef = numerical(s_split[0])
             self.deg = [0 for v in laurent_vars] # list of 0's
             
-            for i in range(len(s_split)/2):
+            for i in range(len(s_split)//2):
                 self.deg[laurent_vars_inverse[s_split[i*2+1]]] = numerical(s_split[i*2+2]) 
                 
         elif isinstance(s, int) or isinstance(s, float):
@@ -199,10 +171,10 @@ class term:
         
     #def __divmod__(self, arg): N/A
      
-    def __div__(self, t):
+    def __floordiv__(self, t):
         """ / operator """
         new_t = term(self)
-        new_t /= t
+        new_t //= t
         return new_t
 
     #def __truediv__(self, arg): N/A
@@ -271,7 +243,7 @@ class term:
         for v in laurent_vars: self.deg[v] += i
         return self
 
-    def __idiv__(self, t):
+    def __ifloordiv__(self, t):
         """ /= operator """
         
         if isinstance(t,int) or isinstance(t, float): # division by integer
@@ -383,7 +355,9 @@ class term:
         """ True if the term is 1, False othwerwise """
         return self.coef == 1 and self.intQ()
     
-    
+    def minusoneQ(self):
+        """ True if the term is 1, False othwerwise """
+        return self.coef == -1 and self.intQ()
     
 
 class laurent:
@@ -566,7 +540,7 @@ class laurent:
         r = laurent(self) # reminder
         
         for n in self.term:
-            t0 = r.term[0] / p.term[0]
+            t0 = r.term[0] // p.term[0]
             q += t0 
             r -= (p * t0)
             r.canonical()
@@ -574,7 +548,7 @@ class laurent:
     
         return [q,r]
     
-    def __div__(self, p):
+    def __floordiv__(self, p):
         """ / operator, see __divmod__ """
         return divmod(self, p)[0]
 
@@ -650,9 +624,9 @@ class laurent:
         self.term = (self ** n).term
         return self
 
-    def __idiv__(self, p):
+    def __ifloordiv__(self, p):
         """ /= operator """
-        self.term = (self / p).term
+        self.term = (self // p).term
         return self
 
     #def __itruediv__(self, arg): N/A
@@ -808,7 +782,50 @@ class laurent:
     def oneQ(self):
         """ True if polynomial is 1, False otherwise """
         return self.monomialQ() and self.term[0].oneQ()
-    
+
+    def minusoneQ(self):
+        """ True if polynomial is -1, False otherwise """
+        return self.monomialQ() and self.term[0].minusoneQ()
+    # "join variables print"
+
+    def join(self, s):
+        # get all different terms
+        LVI = laurent_vars_inverse
+        p = laurent(self)
+        for t in p.term:
+            for v in LVI:
+                if v not in s:
+                    t.deg[LVI[v]] = 0
+                    t.coef = 1
+        p.canonical()
+        for t in p.term: t.coef = 1
+
+        # write the string
+        jstr = ''
+
+        for t in p.term:
+
+            q = laurent(self)
+            # remove all terms that are not as in current term t
+            for t0 in q.term:
+                if any([t0.deg[LVI[v]] != t.deg[LVI[v]] for v in LVI if v in s]):
+                    t0.coef = 0
+
+            lm = laurent()
+            lm.term.append(t)
+            q //= lm
+            q.canonical()
+            # string of the joined term
+            str_t = '' if t.oneQ() else str(t)[3:]
+            if q.monomialQ() and q.term[0].coef < 0 and jstr: jstr = jstr[:-2]
+            jstr += str(q) if q.monomialQ() else ('(' + str(q) + ')')
+            if (q.oneQ() or q.minusoneQ()) and not t.oneQ(): jstr = jstr[:-1]
+            jstr += str_t
+            jstr += ' + '
+
+ #           if s[0] == "+": s = s[2:]
+        return jstr[:-3]
+
     # Static methods
     
     @staticmethod
@@ -821,4 +838,3 @@ class laurent:
             if "a" <= c <= "z" or "A" <= c <= "Z":
                 laurent_vars[i] = c
                 laurent_vars_inverse[c] = i
-
