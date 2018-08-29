@@ -1,5 +1,4 @@
 from laurent import laurent
-# initialize multivariate laurent variables    
 
 # define some laurent polynomials
 poly_p = laurent("x^2y^-3 - y^-1")
