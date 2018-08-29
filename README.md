@@ -1,10 +1,13 @@
 # laurent
-Multivariate Laurent polynomial module
+Multivariate Laurent polynomial module (updated)
 
 Example of usage:
 
-laurent.set_vars("xy")
+poly1 = laurent("x^2y^-3 - y^-1")
+poly2 = laurent("1+3y^-1")
+poly3 = poly1 + poly2 + 3
 
-print laurent("x^2y^-1 - y^-1") * laurent("x^8 - xy^-4") + laurent("x + 8") + 9
+See demo.py for more examples.
 
-For more examples see demo.py.
+Changes:
+- removed variable initialization
