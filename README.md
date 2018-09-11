@@ -1,5 +1,5 @@
 # laurent
-Multivariate Laurent polynomial module (updated)
+Multivariate Laurent polynomial module (updated), Python 3.6+
 
 Example of usage:
 
